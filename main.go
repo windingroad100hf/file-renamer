@@ -1,85 +1,64 @@
 package main
 
-import(
-//"os"
-"fmt"
-"io/ioutil"
-"io/fs"
-"strings"
-"os"
+import (
+	//"os"
+	"bufio"
+	"fmt"
+	"io/fs"
+	"io/ioutil"
+	"os"
+	"strings"
 )
 
 type file string
 
-func main(){
-
-    /*
-    getFileNames
-    for name in filenames{
-        if nameContainsCharacters(){
-            rename file
-        }
-   */ 
-
-
-
-   // origPath := "test.txt"
-   // newPath := "test1.txt"
-   // err := os.Rename(origPath, newPath)
-   // if err != nil {
-   //     log.Fatal(err)
-   // }
-   var files []fs.FileInfo = GetFileNames()
-   for _, fs := range(files) {
-       fmt.Println(fs.Name())
-       if HasBadCharacter(fs.Name()){
-           RenameFile(fs.Name())
-       }
-   }
+func main() {
+	var files []fs.FileInfo = GetFileNames()
+	for _, fs := range files {
+		if HasBadCharacter(fs.Name()) {
+			if UserHasApproved(fs.Name()) {
+				fmt.Println("Renaming...")
+				RenameFile(fs.Name())
+			}
+		}
+	}
 }
 
-
-func GetFileNames() []fs.FileInfo{
-   files, err := ioutil.ReadDir(".")
-   if err != nil {
-       panic(err)
-   }
-   return files
+func UserHasApproved(filename string) bool {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("Would you like to rename the following file: ", filename, "to ", getNewName(filename))
+	userinput, err := reader.ReadString('\n')
+	if err != nil {
+		panic(err)
+	}
+	return userinput == "yes\n" || userinput == "y\n"
 }
 
-func HasBadCharacter(filename string) bool{
-    fmt.Println(strings.Contains(filename, "_") || strings.Contains(filename, " ") || hasUpperCase(filename))
-    fmt.Println()
-    return strings.Contains(filename, "-") || strings.Contains(filename, " ") || hasUpperCase(filename)
+func GetFileNames() []fs.FileInfo {
+	files, err := ioutil.ReadDir(".")
+	if err != nil {
+		panic(err)
+	}
+	return files
+}
 
+func HasBadCharacter(filename string) bool {
+	return strings.Contains(filename, "_") || strings.Contains(filename, " ") || hasUpperCase(filename)
 
 }
 
 func hasUpperCase(filename string) bool {
-    return filename != strings.ToLower(filename)
- }
-
-func RenameFile(oldName string){
-    fmt.Println("OLDNAME: ", oldName)
-    fmt.Println("renaming")
-    newName  := strings.ToLower(oldName)
-    newName = strings.ReplaceAll(newName, "_", "-")
-    newName = strings.ReplaceAll(newName, " ", "-")
-    os.Rename(oldName, newName)
+	return filename != strings.ToLower(filename)
 }
 
-/*
-func RenameFile(oldName string){
-    newName := []byte{}
-    for _, v := range oldName {
-        if v == 32 || (v > 64 && v < 91){
-            v -= 32
-            newName = append(newName,  byte(v))
-            continue
-        }
-            newName = append(newName,  byte(v))
-    }
-    fmt.Println(string(newName))
-    os.Rename(oldName, string(newName))
+func getNewName(oldName string) string {
+	newName := strings.ToLower(oldName)
+	newName = strings.ReplaceAll(newName, "_", "-")
+	newName = strings.ReplaceAll(newName, " ", "-")
+	return newName
+
 }
-*/
+func RenameFile(oldName string) {
+	newName := getNewName(oldName)
+	os.Rename(oldName, newName)
+}
