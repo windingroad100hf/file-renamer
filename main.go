@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+    "time"
 )
 
 type file string
@@ -17,8 +18,13 @@ func main() {
 	for _, fs := range files {
 		if HasBadCharacter(fs.Name()) {
 			if UserHasApproved(fs.Name()) {
-				fmt.Println("Renaming...")
+				fmt.Print("Renaming")
+                for i := 0; i < 30; i++{
+                    fmt.Print(".")
+                    time.Sleep(time.Millisecond * 100)
+                    }
 				RenameFile(fs.Name())
+                fmt.Println()
 			}
 		}
 	}
@@ -27,6 +33,7 @@ func main() {
 func UserHasApproved(filename string) bool {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Would you like to rename the following file: ", filename, "to ", getNewName(filename))
+    fmt.Print("yes (y), no (n): ")
 	userinput, err := reader.ReadString('\n')
 	if err != nil {
 		panic(err)
